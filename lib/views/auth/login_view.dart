@@ -8,6 +8,8 @@ import '../../core/widgets/design_system.dart';
 import '../../core/utils/responsive_layout.dart';
 import '../../core/utils/animations.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/app_state.dart';
+import '../../providers/profile_provider.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -56,7 +58,13 @@ class _LoginViewState extends State<LoginView> {
     final success = await authProvider.login(email, password, _rememberMe);
     
     if (success && mounted) {
-      context.go('/');
+      final appState = context.read<AppStateProvider>();
+      final profileState = context.read<ProfileProvider>();
+      await appState.syncFromProfile();
+      await profileState.reloadProfile();
+      if (mounted) {
+        context.go('/');
+      }
     }
   }
 

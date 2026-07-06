@@ -27,7 +27,7 @@ class ProfileProvider extends ChangeNotifier {
   Future<void> _loadDraft() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final draftJson = prefs.getString('profile_draft');
+      final draftJson = prefs.getString('profile_draft') ?? prefs.getString('user_profile_final');
       if (draftJson != null) {
         _profile = UserProfile.fromJson(jsonDecode(draftJson));
       }
@@ -37,6 +37,19 @@ class ProfileProvider extends ChangeNotifier {
     } catch (e) {
       // Fail silently
     }
+  }
+
+  Future<void> reloadProfile() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final serverProfile = prefs.getString('local_profile_cache');
+      if (serverProfile != null) {
+        await prefs.setString('user_profile_final', serverProfile);
+      }
+    } catch (e) {
+      // fail silently
+    }
+    await _loadDraft();
   }
 
   Future<void> checkDailyWaterReset() async {

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -84,5 +85,31 @@ class AppStateProvider extends ChangeNotifier {
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
+  }
+
+  Future<void> reloadState() async {
+    await _loadFromPrefs();
+  }
+
+  Future<void> syncFromProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    final profileJson = prefs.getString('local_profile_cache') ?? prefs.getString('user_profile_final');
+    if (profileJson != null) {
+      try {
+        final Map<String, dynamic> data = jsonDecode(profileJson);
+        _userName = data['name'] ?? '';
+        _selectedGoal = data['primaryGoal'] ?? '';
+        _activityLevel = data['activityLevel'] ?? '';
+        _isOnboarded = true;
+
+        await prefs.setString('userName', _userName);
+        await prefs.setString('selectedGoal', _selectedGoal);
+        await prefs.setString('activityLevel', _activityLevel);
+        await prefs.setBool('isOnboarded', true);
+        notifyListeners();
+      } catch (e) {
+        // fail silently
+      }
+    }
   }
 }
