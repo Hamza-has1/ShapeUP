@@ -1580,6 +1580,11 @@ class _DashboardViewState extends State<DashboardView> {
         ElevatedButton.icon(
           onPressed: () async {
             await auth.logout();
+            await state.resetData();
+            await profileState.resetProfileState();
+            if (mounted) {
+              context.go('/welcome');
+            }
           },
           icon: const Icon(Icons.logout_rounded),
           label: const Text('Log Out Session'),
@@ -1587,10 +1592,13 @@ class _DashboardViewState extends State<DashboardView> {
         const SizedBox(height: 12),
         TextButton(
           onPressed: () async {
+            await state.resetOnboarding();
             await profileState.resetProfileState();
-            context.go('/onboarding');
+            if (mounted) {
+              context.go('/onboarding');
+            }
           },
-          child: const Text('Retake Health Assessment Wizard', style: TextStyle(color: Colors.redAccent)),
+          child: const Text('Customization', style: TextStyle(color: Colors.redAccent)),
         ),
         const SizedBox(height: 24),
       ],

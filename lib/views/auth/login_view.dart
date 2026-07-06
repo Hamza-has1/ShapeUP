@@ -252,27 +252,6 @@ class _LoginViewState extends State<LoginView> {
                       
                       const SizedBox(height: 32),
 
-                      // Social Logins placeholder
-                      Text(
-                        'OR CONTINUE WITH',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1.5,
-                            ),
-                      ).animateEntrance(delayMs: 250),
-                      const SizedBox(height: 16),
-
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _buildSocialButton(Icons.g_mobiledata_rounded, 'Google', () {}),
-                          const SizedBox(width: 16),
-                          _buildSocialButton(Icons.apple_rounded, 'Apple', () {}),
-                        ],
-                      ).animateEntrance(delayMs: 300),
-
-                      const SizedBox(height: 32),
-
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [

@@ -318,5 +318,6 @@ class ProfileProvider extends ChangeNotifier {
     await prefs.remove('profile_step');
     await prefs.remove('user_profile_final');
     await prefs.remove('profile_completed');
+    await prefs.remove('local_profile_cache');
   }
 }

@@ -118,4 +118,14 @@ class AppStateProvider extends ChangeNotifier {
       }
     }
   }
+
+  Future<void> resetOnboarding() async {
+    _isOnboarded = false;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isOnboarded', false);
+    await prefs.remove('userName');
+    await prefs.remove('selectedGoal');
+    await prefs.remove('activityLevel');
+  }
 }
