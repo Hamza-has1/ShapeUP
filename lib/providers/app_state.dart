@@ -39,6 +39,12 @@ class AppStateProvider extends ChangeNotifier {
     _activityLevel = prefs.getString('activityLevel') ?? '';
     _selectedCoach = prefs.getString('selectedCoach') ?? 'Dr. Blue';
     _isOnboarded = prefs.getBool('isOnboarded') ?? false;
+
+    // Fallback: If a completed profile exists in local or mock server cache, they are onboarded!
+    final hasProfile = prefs.getString('user_profile_final') != null || prefs.getString('local_profile_cache') != null;
+    if (hasProfile) {
+      _isOnboarded = true;
+    }
     
     notifyListeners();
   }

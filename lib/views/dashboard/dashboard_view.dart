@@ -48,11 +48,18 @@ class _DashboardViewState extends State<DashboardView> {
     final brainProvider = context.watch<BrainProvider>();
     final evolutionProvider = context.watch<EvolutionProvider>();
 
-    // Redirect to Health Assessment onboarding if profile is uninitialized
-    if (profileProvider.profile.name.isEmpty) {
+    // Redirect to Health Assessment onboarding only if the user is not marked as onboarded
+    if (!appState.isOnboarded) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         context.go('/onboarding');
       });
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // If onboarded but profile is still loading from storage, show loader instead of redirecting
+    if (profileProvider.profile.name.isEmpty) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
