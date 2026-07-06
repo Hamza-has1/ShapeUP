@@ -3,49 +3,49 @@ import 'package:google_fonts/google_fonts.dart';
 
 class AppColors {
   // Brand color
-  static const Color primaryPurple = Color(0xff40046b); // #40046B
-  static const Color accentPurple = Color(0xff6e10b1);
-  static const Color electricPurple = Color(0xffa133f6);
+  static const Color primaryPurple = Color(0xff6c3baa); // #6C3BAA
+  static const Color accentPurple = Color(0xff6c3baa);
+  static const Color electricPurple = Color(0xff6c3baa);
   
   // Light Mode Colors
-  static const Color lightBg = Colors.white;
-  static const Color lightCardBg = Color(0xfff7f3fb);
-  static const Color lightText = Color(0xff120120);
-  static const Color lightTextSecondary = Color(0xff605070);
+  static const Color lightBg = Color(0xffffffff);
+  static const Color lightCardBg = Color(0xffffffff);
+  static const Color lightText = Color(0xff6c3baa);
+  static const Color lightTextSecondary = Color(0xff6c3baa);
   
   // Dark Mode Colors
-  static const Color darkBg = Color(0xff090010); // True dark luxury purple-black
-  static const Color darkCardBg = Color(0xff180525); // Subtle dark purple card
-  static const Color darkText = Color(0xfff2e6ff);
-  static const Color darkTextSecondary = Color(0xffb29ecc);
+  static const Color darkBg = Color(0xff000000);
+  static const Color darkCardBg = Color(0xff000000);
+  static const Color darkText = Color(0xffffffff);
+  static const Color darkTextSecondary = Color(0xff6c3baa);
 
-  // Status & UI colors
-  static const Color success = Color(0xff00d084);
-  static const Color warning = Color(0xffffab00);
-  static const Color error = Color(0xffff3b30);
-  static const Color info = Color(0xff007aff);
+  // Status & UI colors (aligned to fit the constraints)
+  static const Color success = Color(0xff6c3baa);
+  static const Color warning = Color(0xff6c3baa);
+  static const Color error = Color(0xff6c3baa);
+  static const Color info = Color(0xff6c3baa);
 
   // Luxury Gradients
   static const LinearGradient purpleGradient = LinearGradient(
-    colors: [primaryPurple, accentPurple],
+    colors: [primaryPurple, primaryPurple],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient luxuryDarkGradient = LinearGradient(
-    colors: [Color(0xff140121), Color(0xff090010)],
+    colors: [Color(0xff000000), Color(0xff000000)],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
 
   static const LinearGradient luxuryLightGradient = LinearGradient(
-    colors: [Color(0xffffffff), Color(0xfff7f3fb)],
+    colors: [Color(0xffffffff), Color(0xffffffff)],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
 
   static const LinearGradient neonPurpleGradient = LinearGradient(
-    colors: [Color(0xff9d4edd), Color(0xffe0aaff)],
+    colors: [primaryPurple, primaryPurple],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

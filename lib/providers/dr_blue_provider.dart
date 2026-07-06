@@ -144,7 +144,7 @@ class DrBlueProvider extends ChangeNotifier {
     } else if (query.contains('water') || query.contains('hydrate')) {
       reply = 'Aim to consume **${profile.waterIntake.toStringAsFixed(1)} Liters** of water spread evenly throughout your active hours. Proper hydration is critical for metabolic efficiency.';
     } else if (query.contains('sleep') || query.contains('stress')) {
-      reply = 'You currently sleep **${profile.sleepHours.round()} hours** with **${profile.stressLevel}** stress levels. Focus on setting a strict bedtime and limit blue-light screens 1 hour before sleeping.';
+      reply = 'You currently sleep **${profile.sleepHours.round()} hours**. Focus on setting a strict bedtime and limit blue-light screens 1 hour before sleeping.';
     } else {
       reply = 'Understood. Regarding your profile, we want to prioritize **${profile.primaryGoal}**. Focus on hitting your daily targets, tracking your protein, and getting adequate rest. Let me know if you want me to adjust specific parts of your workout.';
     }

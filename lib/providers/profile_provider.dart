@@ -10,6 +10,11 @@ class ProfileProvider extends ChangeNotifier {
   bool _isSaving = false;
   String? _error;
 
+  double _consumedWaterLiters = 0.0;
+  double get consumedWaterLiters => _consumedWaterLiters;
+  int get consumedGlasses => (_consumedWaterLiters / 0.25).round();
+  int get targetGlasses => (_profile.waterIntake / 0.25).round();
+
   ProfileProvider() {
     _loadDraft();
   }
@@ -27,10 +32,32 @@ class ProfileProvider extends ChangeNotifier {
         _profile = UserProfile.fromJson(jsonDecode(draftJson));
       }
       _currentStep = prefs.getInt('profile_step') ?? 0;
+      await checkDailyWaterReset();
       notifyListeners();
     } catch (e) {
       // Fail silently
     }
+  }
+
+  Future<void> checkDailyWaterReset() async {
+    final prefs = await SharedPreferences.getInstance();
+    final todayStr = DateTime.now().toIso8601String().substring(0, 10);
+    final lastReset = prefs.getString('last_water_reset_date');
+    if (lastReset != todayStr) {
+      _consumedWaterLiters = 0.0;
+      await prefs.setDouble('consumed_water_liters', 0.0);
+      await prefs.setString('last_water_reset_date', todayStr);
+    } else {
+      _consumedWaterLiters = prefs.getDouble('consumed_water_liters') ?? 0.0;
+    }
+    notifyListeners();
+  }
+
+  Future<void> recordWaterIntake(double amount) async {
+    _consumedWaterLiters = amount;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('consumed_water_liters', amount);
   }
 
   Future<void> saveCurrentStep(int step) async {
@@ -45,16 +72,16 @@ class ProfileProvider extends ChangeNotifier {
     required String name,
     required int age,
     required String gender,
-    required String country,
     required double height,
     required double weight,
+    required double goalWeight,
   }) {
     _profile.name = name;
     _profile.age = age;
     _profile.gender = gender;
-    _profile.country = country;
     _profile.height = height;
     _profile.weight = weight;
+    _profile.goalWeight = goalWeight;
     
     // Auto-calculate BMI
     if (height > 0) {
@@ -93,16 +120,12 @@ class ProfileProvider extends ChangeNotifier {
   }
 
   void updateLifestyle({
-    required String routine,
     required String jobType,
     required double sleep,
-    required String stress,
     required double water,
   }) {
-    _profile.routineDescription = routine;
     _profile.jobType = jobType;
     _profile.sleepHours = sleep;
-    _profile.stressLevel = stress;
     _profile.waterIntake = water;
     notifyListeners();
   }
@@ -124,14 +147,11 @@ class ProfileProvider extends ChangeNotifier {
 
   void updateGoals({
     required String goal,
-    required String secondary,
-    required int timeline,
-    required String motivation,
   }) {
     _profile.primaryGoal = goal;
-    _profile.secondaryGoals = secondary;
-    _profile.targetTimelineWeeks = timeline;
-    _profile.motivation = motivation;
+    _profile.secondaryGoals = '';
+    _profile.targetTimelineWeeks = 12;
+    _profile.motivation = '';
     notifyListeners();
   }
 
@@ -230,14 +250,15 @@ class ProfileProvider extends ChangeNotifier {
     // Protein calculation: 1.6g to 2.2g per kg of weight
     _profile.recommendedProteinIntake = _profile.weight * 1.8;
 
-    // Estimated Body fat ranges
-    if (_profile.gender == 'Male') {
-      _profile.estimatedBodyFatRangeMin = 12.0;
-      _profile.estimatedBodyFatRangeMax = 20.0;
-    } else {
-      _profile.estimatedBodyFatRangeMin = 20.0;
-      _profile.estimatedBodyFatRangeMax = 28.0;
+    // Water intake dynamic calculation
+    double baseWater = _profile.weight * 0.033;
+    if (_profile.activityLevel.contains('Active')) {
+      baseWater += 0.5;
     }
+    if (_profile.gender == 'Male') {
+      baseWater += 0.5;
+    }
+    _profile.waterIntake = baseWater;
   }
 
   Future<void> resetProfileState() async {

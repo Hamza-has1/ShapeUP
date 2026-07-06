@@ -13,7 +13,6 @@ import '../../providers/nutrition_provider.dart';
 import '../../providers/workout_provider.dart';
 import '../../providers/analytics_provider.dart';
 import '../../providers/notification_provider.dart';
-import '../../providers/social_provider.dart';
 import '../../providers/brain_provider.dart';
 import '../../providers/evolution_provider.dart';
 import '../../providers/app_state.dart';
@@ -27,14 +26,12 @@ class DashboardView extends StatefulWidget {
 }
 
 class _DashboardViewState extends State<DashboardView> {
-  int _activeTab = 0; // 0: Home, 1: Workout, 2: Nutrition, 3: Social Feed, 4: Profile
+  int _activeTab = 0; // 0: Home, 1: Workout, 2: Nutrition, 3: Profile
   final TextEditingController _weightController = TextEditingController();
-  final TextEditingController _postController = TextEditingController();
 
   @override
   void dispose() {
     _weightController.dispose();
-    _postController.dispose();
     super.dispose();
   }
 
@@ -48,7 +45,6 @@ class _DashboardViewState extends State<DashboardView> {
     final workoutProvider = context.watch<WorkoutProvider>();
     final analyticsProvider = context.watch<AnalyticsProvider>();
     final notificationProvider = context.watch<NotificationProvider>();
-    final socialProvider = context.watch<SocialProvider>();
     final brainProvider = context.watch<BrainProvider>();
     final evolutionProvider = context.watch<EvolutionProvider>();
 
@@ -95,7 +91,6 @@ class _DashboardViewState extends State<DashboardView> {
                       _buildHomeTab(context, authProvider, profileProvider, brainProvider, workoutProvider, nutritionProvider),
                       _buildWorkoutTab(context, profileProvider, workoutProvider, appState.selectedCoach),
                       _buildNutritionTab(context, profileProvider, nutritionProvider, appState.selectedCoach),
-                      _buildSocialTab(context, profileProvider, socialProvider),
                       _buildProfileTab(context, authProvider, profileProvider, analyticsProvider, notificationProvider, appState, evolutionProvider),
                     ],
                   ),
@@ -209,11 +204,7 @@ class _DashboardViewState extends State<DashboardView> {
         const SizedBox(height: 20),
         _buildDailyGoalPanel(context, profileState),
         const SizedBox(height: 20),
-        _buildQuickActions(context),
-        const SizedBox(height: 20),
         _buildProgressSection(context),
-        const SizedBox(height: 20),
-        _buildAiInsightSection(context),
         const SizedBox(height: 20),
         _buildMotivationQuote(context, profileState),
         const SizedBox(height: 20),
@@ -252,10 +243,6 @@ class _DashboardViewState extends State<DashboardView> {
           flex: 2,
           child: Column(
             children: [
-              _buildQuickActions(context),
-              const SizedBox(height: 20),
-              _buildAiInsightSection(context),
-              const SizedBox(height: 20),
               _buildMotivationQuote(context, profileState),
               const SizedBox(height: 20),
               _buildScheduleSection(context),
@@ -485,6 +472,7 @@ class _DashboardViewState extends State<DashboardView> {
 
   Widget _buildDailyGoalPanel(BuildContext context, ProfileProvider state) {
     final profile = state.profile;
+    
     return GlassContainer(
       opacity: 0.05,
       padding: const EdgeInsets.all(24),
@@ -508,13 +496,10 @@ class _DashboardViewState extends State<DashboardView> {
             color: Colors.redAccent,
           ),
           const SizedBox(height: 14),
-          _buildGoalProgressRow(
-            icon: Icons.water_drop_rounded,
-            label: 'Water Intake',
-            value: '${profile.waterIntake.toStringAsFixed(1)} Liters',
-            progress: 0.0,
-            color: Colors.blueAccent,
-          ),
+          
+          // Redesigned Water Intake with interactive glass icons
+          _buildInteractiveWaterSection(context, state),
+          
           const SizedBox(height: 14),
           _buildGoalProgressRow(
             icon: Icons.directions_walk_rounded,
@@ -526,6 +511,73 @@ class _DashboardViewState extends State<DashboardView> {
         ],
       ),
     ).animateScaleEntrance(delayMs: 150);
+  }
+
+  Widget _buildInteractiveWaterSection(BuildContext context, ProfileProvider state) {
+    final glasses = state.targetGlasses.clamp(4, 20);
+    final consumed = state.consumedGlasses;
+    final liters = state.consumedWaterLiters;
+    final targetLiters = state.profile.waterIntake;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.water_drop_rounded, color: Colors.blueAccent, size: 20),
+                const SizedBox(width: 8),
+                const Text('Water Log', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              ],
+            ),
+            Row(
+              children: [
+                Text(
+                  '$consumed / $glasses glasses (${liters.toStringAsFixed(1)} / ${targetLiters.toStringAsFixed(1)} L)',
+                  style: const TextStyle(color: Colors.blueAccent, fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.refresh_rounded, color: Colors.grey, size: 16),
+                  onPressed: () => state.recordWaterIntake(0.0),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: List.generate(glasses, (index) {
+            final active = index < consumed;
+            return GestureDetector(
+              onTap: () {
+                // Tapping index records index + 1 glasses
+                state.recordWaterIntake((index + 1) * 0.25);
+              },
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: active ? Colors.blueAccent.withOpacity(0.15) : AppColors.primaryPurple.withOpacity(0.05),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: active ? Colors.blueAccent : Colors.grey.withOpacity(0.2)),
+                ),
+                child: Icon(
+                  Icons.local_drink_rounded,
+                  color: active ? Colors.blueAccent : Colors.grey.shade400,
+                  size: 20,
+                ),
+              ),
+            );
+          }),
+        ),
+      ],
+    );
   }
 
   Widget _buildGoalProgressRow({
@@ -561,133 +613,6 @@ class _DashboardViewState extends State<DashboardView> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildQuickActions(BuildContext context) {
-    return GlassContainer(
-      opacity: 0.05,
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'QUICK ACTIONS',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primaryPurple,
-                  letterSpacing: 0.5,
-                ),
-          ),
-          const SizedBox(height: 16),
-          GridView.count(
-            crossAxisCount: 3,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            children: [
-              _buildActionItem(context, Icons.fitness_center_rounded, 'Start Workout', () => setState(() => _activeTab = 1)),
-              _buildActionItem(context, Icons.restaurant_menu_rounded, 'Meal Plan', () => setState(() => _activeTab = 2)),
-              _buildActionItem(context, Icons.water_drop_rounded, 'Track Water', () {}),
-              _buildActionItem(context, Icons.scale_rounded, 'Log Weight', () {}),
-              _buildActionItem(context, Icons.person_rounded, 'Dr. Blue', () => context.push('/coaches')),
-              _buildActionItem(context, Icons.pregnant_woman_rounded, 'Dr. Pink', () => context.push('/coaches')),
-            ],
-          ),
-        ],
-      ),
-    ).animateScaleEntrance(delayMs: 200);
-  }
-
-  Widget _buildActionItem(BuildContext context, IconData icon, String label, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.primaryPurple.withOpacity(0.04),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.primaryPurple.withOpacity(0.08)),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: AppColors.primaryPurple, size: 24),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAiInsightSection(BuildContext context) {
-    return Column(
-      children: [
-        _buildInsightCard(
-          context: context,
-          coachName: 'Dr. Blue',
-          message: 'Ensure to add 20g of protein to your breakfast today to fuel muscle recovery.',
-          color: const Color(0xff2a5298),
-        ),
-        const SizedBox(height: 16),
-        _buildInsightCard(
-          context: context,
-          coachName: 'Dr. Pink',
-          message: 'Your sleep was lower today. Keep stress levels in check by drinking chamomile tea.',
-          color: const Color(0xffec008c),
-        ),
-      ],
-    ).animateScaleEntrance(delayMs: 250);
-  }
-
-  Widget _buildInsightCard({
-    required BuildContext context,
-    required String coachName,
-    required String message,
-    required Color color,
-  }) {
-    return GlassContainer(
-      opacity: 0.05,
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 12,
-                backgroundColor: color,
-                child: const Icon(Icons.psychology, size: 14, color: Colors.white),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'AI INSIGHT - $coachName',
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: color),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            message,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton(
-                onPressed: null,
-                child: Text('View Full Plan (Placeholder)', style: TextStyle(color: Colors.grey.shade500, fontSize: 11)),
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 
@@ -991,13 +916,14 @@ class _DashboardViewState extends State<DashboardView> {
     );
   }
 
-  // ---------------- WORKOUT TAB VIEW ----------------
+  // ---------------- WORKOUT PAGE REDESIGN ----------------
   Widget _buildWorkoutTab(BuildContext context, ProfileProvider profileState, WorkoutProvider workout, String activeCoach) {
     if (workout.weeklyWorkoutPlan.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
     final activeDayWorkout = workout.activeDayWorkout!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return ListView(
       padding: const EdgeInsets.all(24),
@@ -1005,27 +931,48 @@ class _DashboardViewState extends State<DashboardView> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Fitness Planner',
-              style: Theme.of(context).textTheme.displaySmall?.copyWith(fontWeight: FontWeight.bold),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'FITNESS PLANNER',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryPurple,
+                        letterSpacing: 1.0,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Daily Training',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900),
+                ),
+              ],
             ),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
                 color: AppColors.primaryPurple.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Text(
-                'History: ${workout.workoutHistory.length} logs',
-                style: const TextStyle(fontSize: 11, color: AppColors.primaryPurple, fontWeight: FontWeight.bold),
+              child: Row(
+                children: [
+                  const Icon(Icons.workspace_premium_rounded, color: AppColors.primaryPurple, size: 16),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${workout.workoutHistory.length} Sessions',
+                    style: const TextStyle(fontSize: 12, color: AppColors.primaryPurple, fontWeight: FontWeight.bold),
+                  ),
+                ],
               ),
             ),
           ],
         ).animateEntrance(delayMs: 100),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
 
+        // Rotating Week Day Cards Carousel
         SizedBox(
-          height: 50,
+          height: 64,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: workout.weeklyWorkoutPlan.length,
@@ -1035,83 +982,104 @@ class _DashboardViewState extends State<DashboardView> {
               return GestureDetector(
                 onTap: () => workout.selectDay(index),
                 child: Container(
-                  margin: const EdgeInsets.only(right: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  margin: const EdgeInsets.only(right: 10),
+                  width: 58,
                   decoration: BoxDecoration(
                     color: isSel ? AppColors.primaryPurple : AppColors.primaryPurple.withOpacity(0.04),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.primaryPurple.withOpacity(0.1)),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: isSel ? AppColors.primaryPurple : AppColors.primaryPurple.withOpacity(0.12)),
                   ),
-                  child: Center(
-                    child: Text(
-                      plan.dayName.substring(0, 3),
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: isSel ? Colors.white : AppColors.primaryPurple,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        plan.dayName.substring(0, 3).toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                          color: isSel ? Colors.white : AppColors.primaryPurple,
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
               );
             },
           ),
         ).animateEntrance(delayMs: 120),
-        const SizedBox(height: 20),
+        const SizedBox(height: 24),
 
+        // Big Main Guided Panel Card
         GlassContainer(
           opacity: 0.05,
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    activeDayWorkout.workoutName,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.primaryPurple),
+                  Expanded(
+                    child: Text(
+                      activeDayWorkout.workoutName,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                    ),
                   ),
                   Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: const BoxDecoration(color: AppColors.success, shape: BoxShape.circle),
-                    child: const Icon(Icons.check_rounded, color: Colors.white, size: 14),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryPurple.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      'Ready',
+                      style: TextStyle(color: AppColors.primaryPurple, fontSize: 11, fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
-              Text(
-                'Duration: ${activeDayWorkout.durationMinutes} minutes | Burn: ~${activeDayWorkout.estimatedCaloriesBurned} kcal',
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              Row(
+                children: [
+                  const Icon(Icons.timer_outlined, color: Colors.grey, size: 16),
+                  const SizedBox(width: 4),
+                  Text('${activeDayWorkout.durationMinutes} mins', style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold)),
+                  const SizedBox(width: 16),
+                  const Icon(Icons.local_fire_department_rounded, color: Colors.grey, size: 16),
+                  const SizedBox(width: 4),
+                  Text('~${activeDayWorkout.estimatedCaloriesBurned} kcal', style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold)),
+                ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               NeonGradientButton(
-                text: 'Start Guided Workout Session',
+                text: 'Start Guided Session Now',
                 onPressed: () => workout.startWorkoutSession(activeDayWorkout),
                 icon: Icons.play_arrow_rounded,
               ),
             ],
           ),
         ).animateScaleEntrance(delayMs: 140),
-        const SizedBox(height: 20),
+        const SizedBox(height: 24),
 
-        Text('Warm-up Routine', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.grey)),
+        // Collapsible Exercise Categories Section
+        Text('WARM-UP SPLIT', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 0.5)),
         const SizedBox(height: 10),
-        ...activeDayWorkout.warmUp.map((ex) => _buildExerciseCard(context, ex)),
+        ...activeDayWorkout.warmUp.map((ex) => _buildRedesignedExerciseCard(context, ex)),
         
-        const SizedBox(height: 16),
-        Text('Main Training Split', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.grey)),
+        const SizedBox(height: 20),
+        Text('MAIN TRAINING PROGRAM', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 0.5)),
         const SizedBox(height: 10),
-        ...activeDayWorkout.exercises.map((ex) => _buildExerciseCard(context, ex)),
+        ...activeDayWorkout.exercises.map((ex) => _buildRedesignedExerciseCard(context, ex)),
 
-        const SizedBox(height: 16),
-        Text('Cool-down & Stretch', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.grey)),
+        const SizedBox(height: 20),
+        Text('COOL-DOWN & FLEXIBILITY', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 0.5)),
         const SizedBox(height: 10),
-        ...activeDayWorkout.coolDown.map((ex) => _buildExerciseCard(context, ex)),
+        ...activeDayWorkout.coolDown.map((ex) => _buildRedesignedExerciseCard(context, ex)),
       ],
     );
   }
 
-  Widget _buildExerciseCard(BuildContext context, Exercise ex) {
+  Widget _buildRedesignedExerciseCard(BuildContext context, Exercise ex) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: GlassContainer(
@@ -1120,25 +1088,35 @@ class _DashboardViewState extends State<DashboardView> {
         child: ExpansionTile(
           shape: const Border(),
           iconColor: AppColors.primaryPurple,
-          title: Text(ex.name, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
+          collapsedIconColor: Colors.grey,
+          title: Text(ex.name, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
           subtitle: Padding(
-            padding: const EdgeInsets.only(top: 4),
+            padding: const EdgeInsets.only(top: 6),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(color: AppColors.primaryPurple.withOpacity(0.08), borderRadius: BorderRadius.circular(6)),
-                  child: Text(ex.targetMuscle, style: const TextStyle(fontSize: 10, color: AppColors.primaryPurple, fontWeight: FontWeight.bold)),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryPurple.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    ex.targetMuscle.toUpperCase(),
+                    style: const TextStyle(fontSize: 9, color: AppColors.primaryPurple, fontWeight: FontWeight.bold),
+                  ),
                 ),
-                const SizedBox(width: 8),
-                Text('Sets: ${ex.sets} | Reps: ${ex.reps}', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                const SizedBox(width: 12),
+                Text(
+                  '${ex.sets} Sets x ${ex.reps} Reps',
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                ),
               ],
             ),
           ),
           children: [
             const Divider(),
             Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1149,11 +1127,11 @@ class _DashboardViewState extends State<DashboardView> {
                     children: ex.instructions.map((ins) => Text('• $ins', style: const TextStyle(fontSize: 12))).toList(),
                   ),
                   const SizedBox(height: 12),
-                  const Text('Safety Guidelines', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.redAccent)),
+                  const Text('Safety Guidelines', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.primaryPurple)),
                   const SizedBox(height: 4),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: ex.safetyTips.map((tip) => Text('• $tip', style: const TextStyle(fontSize: 12, color: Colors.redAccent))).toList(),
+                    children: ex.safetyTips.map((tip) => Text('• $tip', style: const TextStyle(fontSize: 12, color: AppColors.primaryPurple))).toList(),
                   ),
                 ],
               ),
@@ -1164,194 +1142,7 @@ class _DashboardViewState extends State<DashboardView> {
     );
   }
 
-  // ---------------- SOCIAL & COMMUNITY HUB ----------------
-  Widget _buildSocialTab(BuildContext context, ProfileProvider profileState, SocialProvider social) {
-    return ListView(
-      padding: const EdgeInsets.all(24),
-      children: [
-        Text(
-          'Community Hub',
-          style: Theme.of(context).textTheme.displaySmall?.copyWith(fontWeight: FontWeight.bold),
-        ).animateEntrance(delayMs: 100),
-        const SizedBox(height: 16),
-
-        Text('Active Group Challenges', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.grey)),
-        const SizedBox(height: 10),
-        SizedBox(
-          height: 140,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: social.challenges.length,
-            itemBuilder: (context, index) {
-              final ch = social.challenges[index];
-              return Container(
-                width: 260,
-                margin: const EdgeInsets.only(right: 12),
-                child: GlassContainer(
-                  opacity: 0.05,
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(ch.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                      Text(ch.description, style: const TextStyle(fontSize: 10, color: Colors.grey), maxLines: 2, overflow: TextOverflow.ellipsis),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('${ch.participantCount} joined', style: const TextStyle(fontSize: 10, color: AppColors.primaryPurple, fontWeight: FontWeight.bold)),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              minimumSize: Size.zero,
-                            ),
-                            onPressed: () => social.toggleChallenge(ch.id),
-                            child: Text(ch.isJoined ? 'Leave' : 'Join', style: const TextStyle(fontSize: 10)),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-
-        const SizedBox(height: 24),
-
-        Text('Weekly Accountability Rankings', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.grey)),
-        const SizedBox(height: 10),
-        GlassContainer(
-          opacity: 0.04,
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: social.leaderboard.map((entry) {
-              final isMe = entry.name.contains('You');
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Text('#${entry.rank}', style: TextStyle(fontWeight: FontWeight.bold, color: isMe ? AppColors.primaryPurple : Colors.grey, fontSize: 13)),
-                        const SizedBox(width: 12),
-                        Text(entry.name, style: TextStyle(fontWeight: isMe ? FontWeight.bold : FontWeight.normal, fontSize: 13)),
-                      ],
-                    ),
-                    Text('${entry.score} pts', style: TextStyle(fontWeight: FontWeight.bold, color: isMe ? AppColors.primaryPurple : Colors.grey, fontSize: 12)),
-                  ],
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-
-        const SizedBox(height: 24),
-
-        GlassContainer(
-          opacity: 0.05,
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              LuxuryTextField(
-                label: 'SHARE TODAY\'S PROGRESS WITH FRIENDS',
-                hint: 'Finished my cardio session! Protein logged...',
-                controller: _postController,
-                prefixIcon: Icons.edit_note_rounded,
-              ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      final content = _postController.text.trim();
-                      if (content.isNotEmpty) {
-                        final ok = social.addPost(profileState.profile.name, content);
-                        if (ok) {
-                          _postController.clear();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Post added to feed!'), backgroundColor: AppColors.success),
-                          );
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Content violation: Please keep social comments positive & supportive.'), backgroundColor: AppColors.error),
-                          );
-                        }
-                      }
-                    },
-                    child: const Text('Post to Feed'),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 24),
-
-        Text('Community Adherence Feed', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.grey)),
-        const SizedBox(height: 10),
-        Column(
-          children: social.feedPosts.map((post) {
-            return Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: Colors.grey.withOpacity(0.12)),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 14,
-                          backgroundColor: AppColors.primaryPurple.withOpacity(0.2),
-                          child: Text(post.author[0], style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primaryPurple)),
-                        ),
-                        const SizedBox(width: 10),
-                        Text(post.author, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Text(post.content, style: const TextStyle(fontSize: 13, height: 1.4)),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            IconButton(
-                              icon: Icon(
-                                post.isLiked ? Icons.favorite : Icons.favorite_border_rounded,
-                                color: post.isLiked ? Colors.redAccent : Colors.grey,
-                                size: 20,
-                              ),
-                              onPressed: () => social.likePost(post.id),
-                            ),
-                            Text('${post.likes} likes', style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                          ],
-                        ),
-                        Text('${post.comments.length} comments', style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  // ---------------- PROFILE & SETTINGS TAB VIEW ----------------
+  // ---------------- PROFILE & SETTINGS TAB VIEW (REAL-TIME DATA) ----------------
   Widget _buildProfileTab(
     BuildContext context, 
     AuthProvider auth, 
@@ -1364,6 +1155,10 @@ class _DashboardViewState extends State<DashboardView> {
     final double targetW = profileState.profile.goalWeight;
     final List<double> weightPoints = analytics.weightHistory.map((e) => e.weight).toList();
     final List<String> labels = analytics.weightHistory.map((e) => '${e.date.day}/${e.date.month}').toList();
+    
+    // Real progress metrics calculation
+    final workoutLogs = analytics.workoutStreak;
+    final complPercent = analytics.healthScore;
 
     return ListView(
       padding: const EdgeInsets.all(24),
@@ -1381,6 +1176,25 @@ class _DashboardViewState extends State<DashboardView> {
           ),
         ),
 
+        // Real Profile Completion & Goal Progress Card
+        Text('Real-Time Transformation Progress', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.grey)),
+        const SizedBox(height: 12),
+        GlassContainer(
+          opacity: 0.05,
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildProgressMetricRow('Profile Setup Completion', '100% (Onboarded)', 1.0),
+              const SizedBox(height: 14),
+              _buildProgressMetricRow('Daily Water Goal Log', '${profileState.consumedWaterLiters.toStringAsFixed(1)} / ${profileState.profile.waterIntake.toStringAsFixed(1)} L', (profileState.consumedWaterLiters / profileState.profile.waterIntake).clamp(0.0, 1.0)),
+              const SizedBox(height: 14),
+              _buildProgressMetricRow('Goal Adherence Score', '$complPercent%', complPercent / 100.0),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+
         // Wearable Integration & Biomarkers Sync Panel
         Text('Wearable Sync & Biomarkers Hub', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.grey)),
         const SizedBox(height: 12),
@@ -1397,12 +1211,12 @@ class _DashboardViewState extends State<DashboardView> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: evolution.isWearableConnected ? AppColors.success.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+                      color: evolution.isWearableConnected ? AppColors.primaryPurple.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       evolution.isWearableConnected ? 'Connected: ${evolution.connectedDeviceName}' : 'Disconnected',
-                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: evolution.isWearableConnected ? AppColors.success : Colors.grey),
+                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primaryPurple),
                     ),
                   ),
                 ],
@@ -1493,49 +1307,9 @@ class _DashboardViewState extends State<DashboardView> {
 
         const SizedBox(height: 24),
 
-        // Health Score & Streaks
-        GlassContainer(
-          opacity: 0.05,
-          padding: const EdgeInsets.all(24),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'SHAPEUP HEALTH SCORE',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, color: AppColors.primaryPurple),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      '${analytics.healthScore} / 100',
-                      style: Theme.of(context).textTheme.displayLarge?.copyWith(fontSize: 38, fontWeight: FontWeight.w900),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                width: 70,
-                height: 70,
-                decoration: const BoxDecoration(shape: BoxShape.circle, gradient: AppColors.purpleGradient),
-                child: const Icon(Icons.insights_rounded, color: Colors.white, size: 36),
-              ),
-            ],
-          ),
-        ).animateScaleEntrance(delayMs: 120),
-        const SizedBox(height: 20),
-
-        Row(
-          children: [
-            Expanded(child: _buildStreakBadge('Daily Streak', '${analytics.dailyStreak} days', Icons.local_fire_department_rounded, Colors.orange)),
-            const SizedBox(width: 12),
-            Expanded(child: _buildStreakBadge('Workout Streak', '${analytics.workoutStreak} sessions', Icons.fitness_center_rounded, Colors.blue)),
-          ],
-        ).animateEntrance(delayMs: 140),
-        const SizedBox(height: 20),
-
         // Weight chart & Log Form
+        Text('Weight Progress Analytics', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.grey)),
+        const SizedBox(height: 12),
         GlassContainer(
           opacity: 0.05,
           padding: const EdgeInsets.all(20),
@@ -1591,33 +1365,30 @@ class _DashboardViewState extends State<DashboardView> {
             ],
           ),
         ).animateEntrance(delayMs: 180),
-        const SizedBox(height: 20),
+        const SizedBox(height: 24),
 
-        // Achievements
-        Text('Unlocked Badges & Achievements', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.grey)),
+        // Manual Theme Settings Mode Selector
+        Text('App Themes & Preferences', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.grey)),
         const SizedBox(height: 12),
-        Column(
-          children: analytics.achievements.map((ach) {
-            return Card(
-              color: ach.unlocked ? AppColors.primaryPurple.withOpacity(0.04) : Colors.transparent,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: ach.unlocked ? AppColors.primaryPurple.withOpacity(0.12) : Colors.grey.withOpacity(0.12)),
+        GlassContainer(
+          opacity: 0.05,
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('THEME MODE PREFERENCE', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.primaryPurple)),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildThemeOption(context, ThemeMode.system, 'System default', state),
+                  _buildThemeOption(context, ThemeMode.light, 'Light Mode', state),
+                  _buildThemeOption(context, ThemeMode.dark, 'Dark Mode', state),
+                ],
               ),
-              child: ListTile(
-                leading: Icon(ach.icon, color: ach.unlocked ? AppColors.primaryPurple : Colors.grey),
-                title: Text(ach.title, style: TextStyle(fontWeight: FontWeight.bold, color: ach.unlocked ? AppColors.primaryPurple : Colors.grey)),
-                subtitle: Text(ach.description, style: TextStyle(fontSize: 12, color: ach.unlocked ? Colors.grey.shade700 : Colors.grey)),
-                trailing: Icon(
-                  ach.unlocked ? Icons.check_circle_rounded : Icons.lock_outline_rounded,
-                  color: ach.unlocked ? AppColors.success : Colors.grey,
-                ),
-              ),
-            );
-          }).toList(),
-        ).animateEntrance(delayMs: 200),
-
+            ],
+          ),
+        ),
         const SizedBox(height: 24),
 
         // Referral Accountability program
@@ -1714,6 +1485,51 @@ class _DashboardViewState extends State<DashboardView> {
     );
   }
 
+  Widget _buildThemeOption(BuildContext context, ThemeMode mode, String label, AppStateProvider state) {
+    final active = state.themeMode == mode;
+    return GestureDetector(
+      onTap: () => state.setThemeMode(mode),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: active ? AppColors.primaryPurple : AppColors.primaryPurple.withOpacity(0.04),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: active ? AppColors.primaryPurple : Colors.grey.withOpacity(0.2)),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            color: active ? Colors.white : AppColors.primaryPurple,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProgressMetricRow(String label, String value, double progress) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            Text(value, style: const TextStyle(color: AppColors.primaryPurple, fontSize: 12, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        const SizedBox(height: 6),
+        LinearProgressIndicator(
+          value: progress,
+          backgroundColor: AppColors.primaryPurple.withOpacity(0.1),
+          valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primaryPurple),
+          borderRadius: BorderRadius.circular(4),
+        ),
+      ],
+    );
+  }
+
   Widget _buildBiomarkerTile(String title, String val, String status) {
     return Column(
       children: [
@@ -1726,27 +1542,6 @@ class _DashboardViewState extends State<DashboardView> {
     );
   }
 
-  Widget _buildStreakBadge(String title, String value, IconData icon, Color color) {
-    return GlassContainer(
-      opacity: 0.05,
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   // ----------------------------------------------------
 
@@ -1876,7 +1671,7 @@ class _DashboardViewState extends State<DashboardView> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xff140121).withOpacity(0.9) : Colors.white.withOpacity(0.9),
+        color: isDark ? Colors.black.withOpacity(0.9) : Colors.white.withOpacity(0.9),
         border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.12))),
       ),
       child: Row(
@@ -1885,8 +1680,7 @@ class _DashboardViewState extends State<DashboardView> {
           _buildNavItem(0, Icons.home_rounded, 'Home'),
           _buildNavItem(1, Icons.fitness_center_rounded, 'Workout'),
           _buildNavItem(2, Icons.restaurant_menu_rounded, 'Nutrition'),
-          _buildNavItem(3, Icons.people_rounded, 'Social'),
-          _buildNavItem(4, Icons.person_rounded, 'Profile'),
+          _buildNavItem(3, Icons.person_rounded, 'Profile'),
         ],
       ),
     );

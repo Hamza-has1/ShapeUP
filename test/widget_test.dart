@@ -3,7 +3,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shapeup/main.dart';
 import 'package:shapeup/models/user_profile.dart';
 import 'package:shapeup/providers/dr_pink_provider.dart';
-import 'package:shapeup/providers/social_provider.dart';
 import 'package:shapeup/providers/evolution_provider.dart';
 import 'package:shapeup/services/api_service.dart';
 
@@ -52,17 +51,6 @@ void main() {
       expect(drPink.activePlan?.phaseWorkoutIntensity.contains('Low-intensity recovery focus'), true);
     });
 
-    test('Social provider content moderation filter blocks abusive entries', () {
-      final social = SocialProvider();
-      
-      // Clean post should pass
-      bool resClean = social.addPost('Hamza', 'Finished a wonderful morning jog!');
-      expect(resClean, true);
-
-      // Abusive post should fail
-      bool resAbuse = social.addPost('Hamza', 'You look ugly and fat');
-      expect(resAbuse, false);
-    });
 
     test('ApiService synchronization offline storage persistence simulation', () async {
       SharedPreferences.setMockInitialValues({});

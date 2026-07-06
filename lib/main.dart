@@ -11,7 +11,6 @@ import 'providers/nutrition_provider.dart';
 import 'providers/workout_provider.dart';
 import 'providers/analytics_provider.dart';
 import 'providers/notification_provider.dart';
-import 'providers/social_provider.dart';
 import 'providers/brain_provider.dart';
 import 'providers/evolution_provider.dart';
 
@@ -36,7 +35,6 @@ class ShapeUpApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => WorkoutProvider()),
         ChangeNotifierProvider(create: (_) => AnalyticsProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
-        ChangeNotifierProvider(create: (_) => SocialProvider()),
         ChangeNotifierProvider(create: (_) => BrainProvider()),
         ChangeNotifierProvider(create: (_) => EvolutionProvider()),
       ],

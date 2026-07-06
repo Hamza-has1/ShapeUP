@@ -89,8 +89,7 @@ class NutritionProvider extends ChangeNotifier {
     double carbVal = (baseCalories - (protein * 4) - (fatVal * 9)) / 4.0;
 
     final String pref = profile.foodPreference; // Vegetarian, Non-vegetarian, Vegan
-    final String country = profile.country.toLowerCase();
-    final bool isPakistani = country.contains('pakistan') || country.contains('pk');
+    final bool isPakistani = true;
 
     // Create 7 rotation plans
     final List<String> days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];

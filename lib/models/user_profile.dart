@@ -1,14 +1,13 @@
 class UserProfile {
-  // Step 1
+  // Step 1: Basic Information
   String name;
   int age;
   String gender;
-  String country;
   double height; // cm
   double weight; // kg
-
-  // Step 2
   double goalWeight;
+
+  // step 2: Body Metrics & Conditions (silently kept with defaults/from backend)
   String bodyType;
   double bmi;
   String medicalConditions;
@@ -22,27 +21,25 @@ class UserProfile {
   bool isPostpartum;
   bool hasIronDeficiency;
 
-  // Step 3
+  // Step 3: Fitness Level
   String activityLevel;
   String workoutExperience;
   bool gymAccess;
   String homeEquipment;
 
-  // Step 4
-  String routineDescription;
+  // Step 4: Lifestyle
   String jobType;
   double sleepHours;
-  String stressLevel;
   double waterIntake;
 
-  // Step 5
+  // Step 5: Nutrition Preferences (kept in model to avoid breaking algorithms, with default fallback values)
   String foodPreference;
   String allergies;
   String dietRestrictions;
   String budgetRange;
   String countryFoodHint;
 
-  // Step 6
+  // Step 6: Goal Setting
   String primaryGoal;
   String secondaryGoals;
   int targetTimelineWeeks;
@@ -59,7 +56,6 @@ class UserProfile {
     this.name = '',
     this.age = 25,
     this.gender = 'Male',
-    this.country = '',
     this.height = 170.0,
     this.weight = 70.0,
     this.goalWeight = 70.0,
@@ -77,10 +73,8 @@ class UserProfile {
     this.workoutExperience = 'Beginner',
     this.gymAccess = false,
     this.homeEquipment = '',
-    this.routineDescription = '',
     this.jobType = 'Mixed',
     this.sleepHours = 8.0,
-    this.stressLevel = 'Medium',
     this.waterIntake = 2.0,
     this.foodPreference = 'Non-vegetarian',
     this.allergies = '',
@@ -103,7 +97,6 @@ class UserProfile {
       'name': name,
       'age': age,
       'gender': gender,
-      'country': country,
       'height': height,
       'weight': weight,
       'goalWeight': goalWeight,
@@ -121,10 +114,8 @@ class UserProfile {
       'workoutExperience': workoutExperience,
       'gymAccess': gymAccess,
       'homeEquipment': homeEquipment,
-      'routineDescription': routineDescription,
       'jobType': jobType,
       'sleepHours': sleepHours,
-      'stressLevel': stressLevel,
       'waterIntake': waterIntake,
       'foodPreference': foodPreference,
       'allergies': allergies,
@@ -148,7 +139,6 @@ class UserProfile {
       name: json['name'] ?? '',
       age: json['age'] ?? 25,
       gender: json['gender'] ?? 'Male',
-      country: json['country'] ?? '',
       height: (json['height'] ?? 170.0).toDouble(),
       weight: (json['weight'] ?? 70.0).toDouble(),
       goalWeight: (json['goalWeight'] ?? 70.0).toDouble(),
@@ -166,10 +156,8 @@ class UserProfile {
       workoutExperience: json['workoutExperience'] ?? 'Beginner',
       gymAccess: json['gymAccess'] ?? false,
       homeEquipment: json['homeEquipment'] ?? '',
-      routineDescription: json['routineDescription'] ?? '',
       jobType: json['jobType'] ?? 'Mixed',
       sleepHours: (json['sleepHours'] ?? 8.0).toDouble(),
-      stressLevel: json['stressLevel'] ?? 'Medium',
       waterIntake: (json['waterIntake'] ?? 2.0).toDouble(),
       foodPreference: json['foodPreference'] ?? 'Non-vegetarian',
       allergies: json['allergies'] ?? '',
