@@ -335,7 +335,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                 fillColor: AppColors.primaryPurple.withOpacity(0.05),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
               ),
-              items: ['Male', 'Female', 'Other'].map((String val) {
+              items: ['Male', 'Female'].map((String val) {
                 return DropdownMenuItem<String>(value: val, child: Text(val));
               }).toList(),
               onChanged: (val) => setState(() => _gender = val ?? 'Male'),

@@ -217,14 +217,15 @@ class ProfileProvider extends ChangeNotifier {
       _profile.healthRiskFlags.add('Chronic medical condition warning: ${_profile.medicalConditions}');
     }
 
-    // 2. Daily Calories (Harris-Benedict baseline estimation)
+    // 2. Mifflin-St Jeor BMR Calculation (Gold Standard)
     double bmr = 0;
     if (_profile.gender == 'Male') {
-      bmr = 88.362 + (13.397 * _profile.weight) + (4.799 * _profile.height) - (5.677 * _profile.age);
+      bmr = (10.0 * _profile.weight) + (6.25 * _profile.height) - (5.0 * _profile.age) + 5.0;
     } else {
-      bmr = 447.593 + (9.247 * _profile.weight) + (3.098 * _profile.height) - (4.330 * _profile.age);
+      bmr = (10.0 * _profile.weight) + (6.25 * _profile.height) - (5.0 * _profile.age) - 161.0;
     }
 
+    // 3. Activity Level Multiplier
     double activityMultiplier = 1.2;
     switch (_profile.activityLevel) {
       case 'Sedentary (Little to no exercise)':
@@ -244,34 +245,68 @@ class ProfileProvider extends ChangeNotifier {
 
     double tdee = bmr * activityMultiplier;
 
-    // Adjust for goals
+    // Female specific real-world calculations (pregnancy / breastfeeding energy cost)
+    if (_profile.gender == 'Female') {
+      if (_profile.isPregnant) {
+        tdee += 300.0; // 2nd/3rd trimester gestational energy cost
+      } else if (_profile.isPostpartum) {
+        tdee += 500.0; // lactation energy requirement
+      }
+    }
+
+    // 4. Safe Calorie Targets
+    double minimumSafeCalories = (_profile.gender == 'Male') ? 1500.0 : 1200.0;
+    double targetCalories = tdee;
+
     switch (_profile.primaryGoal) {
       case 'Weight Loss':
       case 'Fat Loss':
-        _profile.dailyCalorieEstimate = tdee - 500;
+        targetCalories = tdee - 500.0;
+        if (targetCalories < minimumSafeCalories) {
+          targetCalories = minimumSafeCalories;
+        }
         break;
       case 'Muscle Gain':
       case 'Weight Gain':
-        _profile.dailyCalorieEstimate = tdee + 300;
+        targetCalories = tdee + 300.0;
         break;
       case 'Maintenance':
       default:
-        _profile.dailyCalorieEstimate = tdee;
+        targetCalories = tdee;
         break;
     }
 
-    // Protein calculation: 1.6g to 2.2g per kg of weight
-    _profile.recommendedProteinIntake = _profile.weight * 1.8;
+    _profile.dailyCalorieEstimate = double.parse(targetCalories.toStringAsFixed(1));
 
-    // Water intake dynamic calculation
-    double baseWater = _profile.weight * 0.033;
-    if (_profile.activityLevel.contains('Active')) {
+    // 5. Dynamic Protein Calculation (g per kg of weight based on goals)
+    double proteinFactor = 1.2;
+    if (_profile.activityLevel.contains('Lightly')) {
+      proteinFactor = 1.4;
+    } else if (_profile.activityLevel.contains('Moderately') || _profile.activityLevel.contains('Moderate')) {
+      proteinFactor = 1.6;
+    } else if (_profile.activityLevel.contains('Very')) {
+      proteinFactor = 2.0;
+    }
+    if (_profile.primaryGoal == 'Muscle Gain') {
+      proteinFactor += 0.2;
+    }
+    _profile.recommendedProteinIntake = double.parse((_profile.weight * proteinFactor).toStringAsFixed(1));
+
+    // 6. Water Intake Dynamic Calculation (Liters)
+    double baseWater = _profile.weight * 0.035;
+    if (_profile.activityLevel.contains('Active') || _profile.activityLevel.contains('Moderate')) {
       baseWater += 0.5;
     }
-    if (_profile.gender == 'Male') {
-      baseWater += 0.5;
+    if (_profile.gender == 'Female') {
+      if (_profile.isPregnant) {
+        baseWater += 0.3;
+      } else if (_profile.isPostpartum) {
+        baseWater += 0.7; // fluid recovery for milk supply
+      }
+    } else {
+      baseWater += 0.5; // male baseline adjustment
     }
-    _profile.waterIntake = baseWater;
+    _profile.waterIntake = double.parse(baseWater.toStringAsFixed(2));
   }
 
   Future<void> resetProfileState() async {

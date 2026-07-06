@@ -25,7 +25,7 @@ void main() {
   });
 
   group('ShapeUp Unit & Calculation Validation Tests', () {
-    test('Harris-Benedict formula BMR & TDEE calculation check', () {
+    test('Mifflin-St Jeor formula BMR & TDEE calculation check', () {
       final profile = UserProfile();
       profile.name = 'Test User';
       profile.age = 25;
@@ -36,8 +36,8 @@ void main() {
       profile.primaryGoal = 'Weight Loss';
 
       // Verify BMR estimation
-      double bmr = 88.362 + (13.397 * profile.weight) + (4.799 * profile.height) - (5.677 * profile.age);
-      expect(bmr, closeTo(1882.017, 0.01));
+      double bmr = (10.0 * profile.weight) + (6.25 * profile.height) - (5.0 * profile.age) + 5.0;
+      expect(bmr, closeTo(1805.0, 0.01));
     });
 
     test('Dr. Pink menstrual cycle adaptive workout intensity level rules check', () async {
