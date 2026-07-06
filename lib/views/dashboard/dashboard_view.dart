@@ -119,6 +119,7 @@ class _DashboardViewState extends State<DashboardView> {
     NutritionProvider nutrition,
   ) {
     final profile = profileState.profile;
+    final appState = context.watch<AppStateProvider>();
 
     return RefreshIndicator(
       onRefresh: () async {
@@ -156,8 +157,36 @@ class _DashboardViewState extends State<DashboardView> {
                   Row(
                     children: [
                       IconButton(
-                        onPressed: () {},
-                        icon: const Icon(Icons.notifications_outlined, color: AppColors.primaryPurple),
+                        onPressed: () {
+                          ThemeMode nextMode;
+                          String modeName;
+                          if (appState.themeMode == ThemeMode.system) {
+                            nextMode = ThemeMode.light;
+                            modeName = 'Light Mode';
+                          } else if (appState.themeMode == ThemeMode.light) {
+                            nextMode = ThemeMode.dark;
+                            modeName = 'Dark Mode';
+                          } else {
+                            nextMode = ThemeMode.system;
+                            modeName = 'Automated with device (System)';
+                          }
+                          appState.setThemeMode(nextMode);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Theme: $modeName'),
+                              duration: const Duration(seconds: 1),
+                              backgroundColor: AppColors.primaryPurple,
+                            ),
+                          );
+                        },
+                        icon: Icon(
+                          appState.themeMode == ThemeMode.system
+                              ? Icons.brightness_auto_rounded
+                              : appState.themeMode == ThemeMode.light
+                                  ? Icons.wb_sunny_rounded
+                                  : Icons.mode_night_rounded,
+                          color: AppColors.primaryPurple,
+                        ),
                       ),
                       const SizedBox(width: 8),
                       CircleAvatar(
@@ -728,6 +757,7 @@ class _DashboardViewState extends State<DashboardView> {
     }
 
     final activeDayPlan = nutrition.activeDayPlan!;
+    final appState = context.watch<AppStateProvider>();
 
     return ListView(
       padding: const EdgeInsets.all(24),
@@ -739,9 +769,46 @@ class _DashboardViewState extends State<DashboardView> {
               'Nutrition Planner',
               style: Theme.of(context).textTheme.displaySmall?.copyWith(fontWeight: FontWeight.bold),
             ),
-            IconButton(
-              icon: const Icon(Icons.shopping_bag_outlined, color: AppColors.primaryPurple),
-              onPressed: () => _showShoppingListModal(context, nutrition),
+            Row(
+              children: [
+                IconButton(
+                  onPressed: () {
+                    ThemeMode nextMode;
+                    String modeName;
+                    if (appState.themeMode == ThemeMode.system) {
+                      nextMode = ThemeMode.light;
+                      modeName = 'Light Mode';
+                    } else if (appState.themeMode == ThemeMode.light) {
+                      nextMode = ThemeMode.dark;
+                      modeName = 'Dark Mode';
+                    } else {
+                      nextMode = ThemeMode.system;
+                      modeName = 'Automated with device (System)';
+                    }
+                    appState.setThemeMode(nextMode);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Theme: $modeName'),
+                        duration: const Duration(seconds: 1),
+                        backgroundColor: AppColors.primaryPurple,
+                      ),
+                    );
+                  },
+                  icon: Icon(
+                    appState.themeMode == ThemeMode.system
+                        ? Icons.brightness_auto_rounded
+                        : appState.themeMode == ThemeMode.light
+                            ? Icons.wb_sunny_rounded
+                            : Icons.mode_night_rounded,
+                    color: AppColors.primaryPurple,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.shopping_bag_outlined, color: AppColors.primaryPurple),
+                  onPressed: () => _showShoppingListModal(context, nutrition),
+                ),
+              ],
             ),
           ],
         ).animateEntrance(delayMs: 100),
@@ -924,6 +991,7 @@ class _DashboardViewState extends State<DashboardView> {
 
     final activeDayWorkout = workout.activeDayWorkout!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final appState = context.watch<AppStateProvider>();
 
     return ListView(
       padding: const EdgeInsets.all(24),
@@ -949,22 +1017,59 @@ class _DashboardViewState extends State<DashboardView> {
                 ),
               ],
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppColors.primaryPurple.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.workspace_premium_rounded, color: AppColors.primaryPurple, size: 16),
-                  const SizedBox(width: 6),
-                  Text(
-                    '${workout.workoutHistory.length} Sessions',
-                    style: const TextStyle(fontSize: 12, color: AppColors.primaryPurple, fontWeight: FontWeight.bold),
+            Row(
+              children: [
+                IconButton(
+                  onPressed: () {
+                    ThemeMode nextMode;
+                    String modeName;
+                    if (appState.themeMode == ThemeMode.system) {
+                      nextMode = ThemeMode.light;
+                      modeName = 'Light Mode';
+                    } else if (appState.themeMode == ThemeMode.light) {
+                      nextMode = ThemeMode.dark;
+                      modeName = 'Dark Mode';
+                    } else {
+                      nextMode = ThemeMode.system;
+                      modeName = 'Automated with device (System)';
+                    }
+                    appState.setThemeMode(nextMode);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Theme: $modeName'),
+                        duration: const Duration(seconds: 1),
+                        backgroundColor: AppColors.primaryPurple,
+                      ),
+                    );
+                  },
+                  icon: Icon(
+                    appState.themeMode == ThemeMode.system
+                        ? Icons.brightness_auto_rounded
+                        : appState.themeMode == ThemeMode.light
+                            ? Icons.wb_sunny_rounded
+                            : Icons.mode_night_rounded,
+                    color: AppColors.primaryPurple,
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryPurple.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.workspace_premium_rounded, color: AppColors.primaryPurple, size: 16),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${workout.workoutHistory.length} Sessions',
+                        style: const TextStyle(fontSize: 12, color: AppColors.primaryPurple, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ],
         ).animateEntrance(delayMs: 100),
