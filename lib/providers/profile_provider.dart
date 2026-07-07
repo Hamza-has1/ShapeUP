@@ -27,11 +27,12 @@ class ProfileProvider extends ChangeNotifier {
   Future<void> _loadDraft() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final draftJson = prefs.getString('profile_draft') ?? prefs.getString('user_profile_final');
+      final email = prefs.getString('auth_email') ?? 'default';
+      final draftJson = prefs.getString('profile_draft_$email') ?? prefs.getString('user_profile_final_$email');
       if (draftJson != null) {
         _profile = UserProfile.fromJson(jsonDecode(draftJson));
       }
-      _currentStep = prefs.getInt('profile_step') ?? 0;
+      _currentStep = prefs.getInt('profile_step_$email') ?? 0;
       await checkDailyWaterReset();
       notifyListeners();
     } catch (e) {
@@ -42,9 +43,10 @@ class ProfileProvider extends ChangeNotifier {
   Future<void> reloadProfile() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final serverProfile = prefs.getString('local_profile_cache');
+      final email = prefs.getString('auth_email') ?? 'default';
+      final serverProfile = prefs.getString('local_profile_cache_$email');
       if (serverProfile != null) {
-        await prefs.setString('user_profile_final', serverProfile);
+        await prefs.setString('user_profile_final_$email', serverProfile);
       }
     } catch (e) {
       // fail silently
@@ -77,8 +79,9 @@ class ProfileProvider extends ChangeNotifier {
     _currentStep = step;
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('profile_step', step);
-    await prefs.setString('profile_draft', jsonEncode(_profile.toJson()));
+    final email = prefs.getString('auth_email') ?? 'default';
+    await prefs.setInt('profile_step_$email', step);
+    await prefs.setString('profile_draft_$email', jsonEncode(_profile.toJson()));
   }
 
   void updateBasicInfo({
@@ -183,12 +186,13 @@ class ProfileProvider extends ChangeNotifier {
       await ApiService.syncProfileToServer(jsonPayload);
 
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user_profile_final', jsonPayload);
-      await prefs.setBool('profile_completed', true);
+      final email = prefs.getString('auth_email') ?? 'default';
+      await prefs.setString('user_profile_final_$email', jsonPayload);
+      await prefs.setBool('profile_completed_$email', true);
       
-      // Clear drafts
-      await prefs.remove('profile_draft');
-      await prefs.remove('profile_step');
+      // Clear drafts namespaced by user email
+      await prefs.remove('profile_draft_$email');
+      await prefs.remove('profile_step_$email');
 
       _isSaving = false;
       notifyListeners();

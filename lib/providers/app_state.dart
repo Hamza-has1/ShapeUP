@@ -34,14 +34,15 @@ class AppStateProvider extends ChangeNotifier {
       _themeMode = ThemeMode.system;
     }
 
-    _userName = prefs.getString('userName') ?? '';
-    _selectedGoal = prefs.getString('selectedGoal') ?? '';
-    _activityLevel = prefs.getString('activityLevel') ?? '';
-    _selectedCoach = prefs.getString('selectedCoach') ?? 'Dr. Blue';
-    _isOnboarded = prefs.getBool('isOnboarded') ?? false;
+    final email = prefs.getString('auth_email') ?? 'default';
+    _userName = prefs.getString('userName_$email') ?? '';
+    _selectedGoal = prefs.getString('selectedGoal_$email') ?? '';
+    _activityLevel = prefs.getString('activityLevel_$email') ?? '';
+    _selectedCoach = prefs.getString('selectedCoach_$email') ?? 'Dr. Blue';
+    _isOnboarded = prefs.getBool('isOnboarded_$email') ?? false;
 
     // Fallback: If a completed profile exists in local or mock server cache, they are onboarded!
-    final hasProfile = prefs.getString('user_profile_final') != null || prefs.getString('local_profile_cache') != null;
+    final hasProfile = prefs.getString('user_profile_final_$email') != null || prefs.getString('local_profile_cache_$email') != null;
     if (hasProfile) {
       _isOnboarded = true;
     }
@@ -68,17 +69,19 @@ class AppStateProvider extends ChangeNotifier {
     notifyListeners();
 
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('userName', name);
-    await prefs.setString('selectedGoal', goal);
-    await prefs.setString('activityLevel', activity);
-    await prefs.setBool('isOnboarded', true);
+    final email = prefs.getString('auth_email') ?? 'default';
+    await prefs.setString('userName_$email', name);
+    await prefs.setString('selectedGoal_$email', goal);
+    await prefs.setString('activityLevel_$email', activity);
+    await prefs.setBool('isOnboarded_$email', true);
   }
 
   Future<void> selectCoach(String coachName) async {
     _selectedCoach = coachName;
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('selectedCoach', coachName);
+    final email = prefs.getString('auth_email') ?? 'default';
+    await prefs.setString('selectedCoach_$email', coachName);
   }
 
   Future<void> resetData() async {
@@ -99,7 +102,8 @@ class AppStateProvider extends ChangeNotifier {
 
   Future<void> syncFromProfile() async {
     final prefs = await SharedPreferences.getInstance();
-    final profileJson = prefs.getString('local_profile_cache') ?? prefs.getString('user_profile_final');
+    final email = prefs.getString('auth_email') ?? 'default';
+    final profileJson = prefs.getString('local_profile_cache_$email') ?? prefs.getString('user_profile_final_$email');
     if (profileJson != null) {
       try {
         final Map<String, dynamic> data = jsonDecode(profileJson);
@@ -108,10 +112,10 @@ class AppStateProvider extends ChangeNotifier {
         _activityLevel = data['activityLevel'] ?? '';
         _isOnboarded = true;
 
-        await prefs.setString('userName', _userName);
-        await prefs.setString('selectedGoal', _selectedGoal);
-        await prefs.setString('activityLevel', _activityLevel);
-        await prefs.setBool('isOnboarded', true);
+        await prefs.setString('userName_$email', _userName);
+        await prefs.setString('selectedGoal_$email', _selectedGoal);
+        await prefs.setString('activityLevel_$email', _activityLevel);
+        await prefs.setBool('isOnboarded_$email', true);
         notifyListeners();
       } catch (e) {
         // fail silently
@@ -123,9 +127,10 @@ class AppStateProvider extends ChangeNotifier {
     _isOnboarded = false;
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isOnboarded', false);
-    await prefs.remove('userName');
-    await prefs.remove('selectedGoal');
-    await prefs.remove('activityLevel');
+    final email = prefs.getString('auth_email') ?? 'default';
+    await prefs.setBool('isOnboarded_$email', false);
+    await prefs.remove('userName_$email');
+    await prefs.remove('selectedGoal_$email');
+    await prefs.remove('activityLevel_$email');
   }
 }

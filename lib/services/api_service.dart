@@ -46,19 +46,19 @@ class ApiService {
   static Future<bool> syncProfileToServer(String jsonProfileString) async {
     await _simulateLatency();
     final prefs = await SharedPreferences.getInstance();
+    final email = prefs.getString('auth_email') ?? 'default';
     
-    // Save to local sqlite-style cache database
-    await prefs.setString(_profileCacheKey, jsonProfileString);
+    // Save to local sqlite-style cache database namespaced by user email
+    await prefs.setString('${_profileCacheKey}_$email', jsonProfileString);
     
-    // In a real application, make a POST call to $_baseUrl/profile/sync
-    // print('Synced profile payload to: $_baseUrl/profile/sync');
     return true;
   }
 
   static Future<String?> fetchProfileFromServer() async {
     await _simulateLatency();
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_profileCacheKey);
+    final email = prefs.getString('auth_email') ?? 'default';
+    return prefs.getString('${_profileCacheKey}_$email');
   }
 
   // Check Token Rotations
